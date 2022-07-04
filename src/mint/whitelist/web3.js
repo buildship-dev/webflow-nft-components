@@ -2,9 +2,11 @@ import { formatValue } from '../../utils';
 import { getWalletAddressOrConnect, web3 } from '../../wallet';
 import { fetchABI, getConfigChainID } from '../../contract';
 import { buildTx } from '../../tx';
-import { getFindWhitelistURL } from './constants';
+import { getFindWhitelistURL, getFindWhitelistURLbyNFT } from './constants';
 import { sendEvent } from '../../analytics';
 import { getDefaultMaxTokensPerMint } from '../web3';
+
+// import brawlers_addresses from './brawlers.json';
 
 let whitelistCache = {}
 let presaleContract
@@ -49,6 +51,17 @@ export const fetchUserWhitelist = async (wallet) => {
 
     const contractAddress = window.CONTRACT_ADDRESS?.toLowerCase()
     const wlAddress = window.WHITELIST_ADDRESS?.toLowerCase()
+
+    const nft_r = await fetch(getFindWhitelistURLbyNFT(contractAddress))
+    const nft_info = await nft_r.json()
+
+    if (!nft_info.airdrops
+            .filter(a => a.full_list?.map(x => x.toLowerCase())
+            .includes(wallet.toLowerCase())
+    )) {
+        return
+    }
+
     const r = await fetch(getFindWhitelistURL(wallet))
     const { airdrops } = await r.json()
 
