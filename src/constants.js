@@ -119,3 +119,5 @@ export const getBaseURL = () => {
     }
     return "https://nftcomponents.vercel.app"
 }
+
+export const BUILDSHIP_API_BASE = "https://metadata.buildship.xyz/api"

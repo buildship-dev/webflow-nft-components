@@ -8,12 +8,17 @@ import {
     getMintPrice,
     mint
 } from '../mint/web3';
+import { getPresaleMaxPerAddress, mint as mintWhitelist } from '../mint/whitelist/web3'
 import { showAlert } from './AutoHideAlert';
 import { parseTxError, roundToDecimal } from '../utils';
 import { Attribution } from './Attribution';
+import { sendEvent } from '../analytics';
 import { isEthereumContract } from "../contract";
 
-export const QuantityModalStep = ({ setQuantity, setStep, setIsLoading, setTxHash }) => {
+export const QuantityModalStep = ({
+      launchType, setQuantity, setStep,
+      setIsOpen, setIsLoading, setTxHash
+}) => {
     const [quantityValue, setQuantityValue] = useState(1)
     const [maxTokens, setMaxTokens] = useState(getDefaultMaxTokensPerMint())
     const [mintPrice, setMintPrice] = useState(undefined)
@@ -21,19 +26,26 @@ export const QuantityModalStep = ({ setQuantity, setStep, setIsLoading, setTxHas
     const [totalNumber, setTotalNumber] = useState()
 
     useEffect(() => {
-        if (isEthereumContract()) {
+        if (isEthereumContract() && launchType !== "whitelist") {
             getMintPrice().then(price => {
                 if (price !== undefined) {
                     setMintPrice(Number((price) / 1e18))
                 }
             })
         }
-        getMaxTokensPerMint().then(setMaxTokens)
+
+        (launchType === "whitelist" ? getPresaleMaxPerAddress : getMaxTokensPerMint)()
+            .then(setMaxTokens)
+
         if (!window.DEFAULTS?.hideCounter) {
             getMintedNumber().then(setMintedNumber)
             getMaxSupply().then(setTotalNumber)
         }
     }, [])
+
+    const mintWithLaunchType = (quantity) => {
+        return launchType === "whitelist" ? mintWhitelist(quantity) : mint(quantity)
+    }
 
     const step = maxTokens <= 5 ? maxTokens : 10
     const marks = [...Array(Math.floor(maxTokens / step) + 1)]
@@ -44,8 +56,10 @@ export const QuantityModalStep = ({ setQuantity, setStep, setIsLoading, setTxHas
         }))
 
     const onSuccess = async () => {
+        sendEvent(window.analytics, 'public-sale-mint-button-click', {})
+
         setIsLoading(true)
-        const { tx } = await mint(quantityValue)
+        const { tx } = await mintWithLaunchType(quantityValue)
         if (tx === undefined) {
             setIsLoading(false)
         }
@@ -54,11 +68,16 @@ export const QuantityModalStep = ({ setQuantity, setStep, setIsLoading, setTxHas
         })?.on("confirmation", async () => {
             setIsLoading(false)
             showAlert(`Successfully minted ${quantityValue} NFTs`, "success")
+
+            sendEvent(window.analytics, `${launchType}-mint-success`, {})
         })?.on("error", (e) => {
             setIsLoading(false)
             const { code, message } = parseTxError(e);
             if (code !== 4001) {
                 showAlert(`Minting error: ${message}. Please try again or contact us`, "error");
+                sendEvent(window.analytics, `${launchType}-mint-error`, { error: message })
+            } else {
+                sendEvent(window.analytics, `${launchType}-mint-rejected`, { error: message })
             }
         })
     }

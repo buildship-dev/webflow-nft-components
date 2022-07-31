@@ -1,6 +1,7 @@
 import { updateMintButton, updateMintedCounter } from "./ui.js";
 import { updateConnectButton, updateWalletStatus } from "../wallet.js";
 import { setContracts } from "../contract.js";
+import { setupAnalytics } from "../analytics.js";
 import { blacklist } from "./blacklist";
 
 export const init = async () => {
@@ -10,11 +11,16 @@ export const init = async () => {
         return
     }
 
+    setupAnalytics();
+
     await updateWalletStatus();
-    await setContracts();
     updateConnectButton();
-    updateMintedCounter();
-    updateMintButton();
+    if (!window.DISABLE_MINT) {
+        await setContracts();
+        updateMintedCounter();
+        updateMintButton();
+    } else {
+        console.log("MINT DISABLED")
+    }
 }
 
-init();

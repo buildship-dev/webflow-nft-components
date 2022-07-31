@@ -4,6 +4,8 @@ import { NETWORKS } from "./constants.js";
 
 export let NFTContract;
 
+export let ExtensionContract;
+
 export const initContract = async (contract, shouldSwitchNetwork=true) => {
     const host = normalizeURL(window.location.href);
     const allowedURLs = contract?.allowedURLs?.map(u => normalizeURL(u));
@@ -25,9 +27,7 @@ const initContractGlobalObject = async () => {
         alert("You forgot to insert your NFT contract address in your Webflow Embed code. Insert your contract address, publish the website and try again. If you don't have it, contact https://buildship.xyz")
         return
     }
-    // Default to Ethereum
-    const networkID = window.NETWORK_ID ?? 1;
-    const chainID = window.IS_TESTNET ? NETWORKS[networkID].testnetID : networkID;
+    const chainID = getConfigChainID()
     window.CONTRACT = {
         nft: {
             address: {
@@ -37,6 +37,23 @@ const initContractGlobalObject = async () => {
             allowedNetworks: [chainID]
         }
     }
+
+    if (window.EXTENSION_ADDRESS) {
+        window.CONTRACT.extension = {
+            address: {
+                [chainID]: window.EXTENSION_ADDRESS,
+            },
+            abi: await fetchABI(window.EXTENSION_ADDRESS, chainID),
+            allowedNetworks: [chainID]
+        }
+    }
+
+}
+
+export const getConfigChainID = () => {
+    // Default to Ethereum
+    const networkID = window.NETWORK_ID ?? 1;
+    return window.IS_TESTNET ? NETWORKS[networkID].testnetID : networkID;
 }
 
 export const fetchABI = async (address, chainID) => {
@@ -103,6 +120,11 @@ export const setContracts = async (shouldSwitchNetwork=true) => {
         return
     }
     NFTContract = await initContract(window.CONTRACT.nft, false);
+
+    if (window.CONTRACT.extension) {
+        ExtensionContract = await initContract(window.CONTRACT.extension, false);
+    }
+
     console.log("NFTContract", NFTContract)
 }
 

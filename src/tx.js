@@ -12,13 +12,24 @@ export const sendTx = async (tx, txData, defaultGasLimit) => {
     return tx.send({...txData, gasLimit: estimatedGas + 5000, maxFeePerGas, maxPriorityFeePerGas });
 }
 
+export const buildTx = async (tx, txData, defaultGasLimit, gasLimitSlippage = 5000) => {
+    const estimatedGas = await estimateGasLimit(tx, txData, defaultGasLimit);
+    if (!estimatedGas) {
+        return Promise.reject()
+    }
+    const maxFeePerGas = await estimateMaxGasFee(tx);
+    const maxPriorityFeePerGas = await estimateMaxPriorityFeePerGas();
+    const gasLimit = estimatedGas + gasLimitSlippage
+    return {...txData, gasLimit, maxFeePerGas, maxPriorityFeePerGas }
+}
+
 const estimateGasLimit = (tx, txData, defaultGasLimit) => {
     return tx.estimateGas(txData).catch((e) => {
         const { code, message } = parseTxError(e);
         if (code === -32000) {
             return defaultGasLimit;
         }
-        showAlert(`Error ${message}. Please try refreshing page, check your MetaMask connection or contact us to resolve`, "error");
+        showAlert(`${message}. Please try refreshing page, check your MetaMask connection or contact us to resolve`, "error");
         console.log(e);
     })
 }

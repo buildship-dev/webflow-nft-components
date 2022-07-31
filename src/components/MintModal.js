@@ -26,6 +26,7 @@ const DialogTitleWithClose = ({ children, onClose }) => {
 }
 
 export const MintModal = (props, ref) => {
+    const [launchType, setLaunchType] = useState("public")
     const [isOpen, setIsOpen] = useState(false)
     const [txHash, setTxHash] = useState(undefined)
     const [isLoading, setIsLoading] = useState(false)
@@ -37,7 +38,7 @@ export const MintModal = (props, ref) => {
     }
 
     useImperativeHandle(ref, () => ({
-            setIsOpen, setQuantity
+            setIsOpen, setQuantity, setLaunchType
         })
     )
 
@@ -84,6 +85,8 @@ export const MintModal = (props, ref) => {
             </DialogTitleWithClose>
             <DialogContent style={styles.mintModalContent}>
                 {step === 1 && <QuantityModalStep
+                    setIsOpen={setIsOpen}
+                    launchType={launchType}
                     setTxHash={setTxHash}
                     setQuantity={setQuantity}
                     setStep={setStep}
@@ -98,9 +101,12 @@ export const MintModal = (props, ref) => {
 
 export const modalRef = React.createRef();
 
-export const showMintModal = (quantity) => {
+export const showMintModal = (quantity, launchType) => {
     if (quantity) {
         modalRef.current?.setQuantity(quantity)
+    }
+    if (launchType) {
+        modalRef.current?.setLaunchType(launchType)
     }
     modalRef.current?.setIsOpen(true);
 }

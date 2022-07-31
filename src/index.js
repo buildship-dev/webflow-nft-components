@@ -5,7 +5,9 @@ import { App } from "./components/App.js";
 import "./styles/index.css";
 import { showAlert } from "./components/AutoHideAlert.js";
 import { showMintModal } from "./components/MintModal.js";
+import { showJoinWhitelistModal } from './components/JoinWhitelistModal';
 import { init } from "./mint";
+import { initWhitelist } from './mint/whitelist';
 import { dirtyFixConnectWalletUI } from "./utils";
 
 // Anonymous analytics for Buildship to know how many users
@@ -41,6 +43,7 @@ const renderAppContainer = () => {
 document.addEventListener("DOMContentLoaded", () => {
     renderAppContainer();
     init()
+    initWhitelist()
 
     // TODO: remove this when migrated to @buildship/web3-login or forked Web3Modal
     // Puts "custom-metamask" provider as the first option
@@ -48,7 +51,4 @@ document.addEventListener("DOMContentLoaded", () => {
     sendAnonymousAnalytics()
 });
 
-export { showAlert, showMintModal, renderAppContainer };
-
-
-
+export { showAlert, showMintModal, showJoinWhitelistModal, renderAppContainer };

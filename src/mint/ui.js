@@ -1,4 +1,4 @@
-import { getMaxSupply, getMintedNumber} from "./web3.js";
+import { getMaxSupply, getMintedNumber } from "./web3.js";
 import { showMintModal } from "../components/MintModal";
 import { getWalletAddressOrConnect } from '../wallet';
 
@@ -57,7 +57,7 @@ const getMintQuantity = () => {
     return quantity !== '' && quantity !== undefined ? Number(quantity) : undefined;
 }
 
-const setButtonText = (btn, text) => {
+export const setButtonText = (btn, text) => {
     if (btn.childElementCount > 0) {
         btn.children[0].textContent = text;
     } else {

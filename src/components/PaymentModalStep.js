@@ -3,6 +3,7 @@ import { mintViaWebill } from '../mint/bridge';
 import { mint } from '../mint/web3';
 import { showAlert } from './AutoHideAlert';
 import { parseTxError } from '../utils';
+import { sendEvent } from '../analytics';
 import { Box, Typography } from '@mui/material';
 import React from 'react';
 
@@ -21,13 +22,20 @@ export const PaymentModalStep = ({ quantity }) => {
         fee: "",
         image: `${getBaseURL()}/images/polygon-logo.svg`,
         onClick: async () => {
+            sendEvent(window.analytics, 'public-sale-mint-button-click', {})
+
             const { tx } = await mint(quantity ?? 1)
             tx?.on("confirmation", (r) => {
                 showAlert(`Successfully minted ${1} NFTs`, "success")
+
+                sendEvent(window.analytics, 'public-sale-mint-success', {})
             })?.on("error", (e) => {
                 const { code, message } = parseTxError(e);
                 if (code !== 4001) {
                     showAlert(`Minting error: ${message}. Please try again or contact us`, "error");
+                    sendEvent(window.analytics, 'public-sale-mint-error', { error: message })
+                } else {
+                    sendEvent(window.analytics, 'public-sale-mint-rejected', { error: message })
                 }
             })
         }
